@@ -13,17 +13,26 @@ db = client.youtube
 collection=db.harvesting_data
 
 mydb=sql.connect(
-host="localhost",
+host="mydb",
 user="root",
 password="",
+port=3306
 )
 
 apikey = "AIzaSyAua-mtrggdS3bCV72ReZRjx74SQCenWgQ"
 
 mycursor=mydb.cursor(buffered=True)
-mycursor.execute('use youtube')
 
-# print(mydb)
+
+try:
+    mycursor.execute('use youtube')
+except:
+    mycursor.execute("CREATE DATABASE youtube character set utf8mb4 collate utf8mb4_general_ci;")
+    mycursor.execute('use youtube')
+    mycursor.execute("CREATE TABLE channel (CHANNEL_ID varchar(255) PRIMARY KEY NOT NULL ,CHANNEL_NAME varchar(255) DEFAULT NULL,CHANNEL_TYPE varchar(255) DEFAULT NULL,CHANNEL_VIEWS int(15) DEFAULT NULL,CHANNEL_DESC text DEFAULT NULL,CHANNEL_STATUS varchar(255) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;")
+    mycursor.execute("CREATE TABLE playlist (PLAYLIST_ID varchar(255) PRIMARY KEY NOT NULL,CHANNEL_ID varchar(255) DEFAULT NULL,PLAYLIST_NAME varchar(255) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;")
+    mycursor.execute("CREATE TABLE video (VIDEO_ID varchar(255) PRIMARY KEY NOT NULL,PLAYLIST_ID varchar(255) DEFAULT NULL,VIDEO_NAME varchar(255) DEFAULT NULL,VIDEO_DESCRIPTION text DEFAULT NULL,PUBLISHED_DATE varchar(50) DEFAULT NULL,VIEW_COUNT int(11) DEFAULT NULL,LIKE_COUNT int(11) DEFAULT NULL,DISLIKE_COUNT int(11) DEFAULT NULL,FAVORITE_COUNT int(11) DEFAULT NULL,COMMENT_COUNT int(11) DEFAULT NULL,DURATION int(11) DEFAULT NULL,THUMBNAIL varchar(255) DEFAULT NULL,CAPTION_STATUS varchar(255) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;")
+    mycursor.execute("CREATE TABLE comment (COMMENT_ID varchar(255) PRIMARY KEY NOT NULL,VIDEO_ID varchar(255) DEFAULT NULL,COMMENT_TEXT text DEFAULT NULL,COMMENT_AUTHOR varchar(255) DEFAULT NULL,COMMENT_PUBLISHED_DATE varchar(50) DEFAULT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;")
 
 def get_channel_details_with_channelid(channel_id):
   
@@ -306,10 +315,10 @@ questions=[
 
 def map_questions_to_query(questions):
     query=[
-    "SELECT v.VIDEO_NAME,c.CHANNEL_NAME from video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID;",
+    "SELECT c.CHANNEL_NAME,v.VIDEO_NAME from video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID;",
     "SELECT c.CHANNEL_NAME,COUNT(v.VIDEO_ID) as 'COUNT' from channel c JOIN playlist p ON c.CHANNEL_ID = p.CHANNEL_ID JOIN video v ON v.PLAYLIST_ID=p.PLAYLIST_ID GROUP BY c.CHANNEL_NAME;",
-    "SELECT v.VIDEO_NAME, v.VIEW_COUNT, c.CHANNEL_NAME FROM video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID ORDER BY VIEW_COUNT DESC LIMIT 10;",
-    "SELECT COUNT(c.COMMENT_ID),v.VIDEO_NAME FROM comment c JOIN video v on c.VIDEO_ID=v.VIDEO_ID GROUP BY v.VIDEO_ID ORDER BY COUNT(c.COMMENT_ID) DESC;",
+    "SELECT c.CHANNEL_NAME,v.VIDEO_NAME, v.VIEW_COUNT FROM video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID ORDER BY VIEW_COUNT DESC LIMIT 10;",
+    "SELECT v.VIDEO_NAME,COUNT(c.COMMENT_ID) FROM comment c JOIN video v on c.VIDEO_ID=v.VIDEO_ID GROUP BY v.VIDEO_ID ORDER BY COUNT(c.COMMENT_ID) DESC;",
     "SELECT c.CHANNEL_NAME,v.VIDEO_NAME,v.LIKE_COUNT FROM video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID ORDER BY v.LIKE_COUNT DESC;",
     "SELECT VIDEO_NAME,LIKE_COUNT,DISLIKE_COUNT FROM video ORDER BY LIKE_COUNT DESC;",
     "SELECT c.CHANNEL_NAME,SUM(v.VIEW_COUNT) from video v JOIN playlist p ON v.PLAYLIST_ID = p.PLAYLIST_ID JOIN channel c ON c.CHANNEL_ID = p.CHANNEL_ID GROUP BY c.CHANNEL_ID;",
@@ -327,7 +336,7 @@ def map_questions_to_query(questions):
     ['Video Name','Likes Count','Dislike Count'],
     ['Channel Name','Total Views Count'],
     ['Channel Name'],
-    ['Channel Name','Average Duration'],
+    ['Channel Name','Average Duration(in sec)'],
     ['Channel Name','Video Name','Comments Count']
     ]
     dic={}
@@ -349,7 +358,7 @@ def main():
         st.write('''This app is a Youtube Scraping web tool created using Streamlit. 
                 It scrapes the Youtube channel data with the provided youtube channel ID.
                 The retrived data are uploaded in to databases.Then we can analyse with few set of questions''')
-        image = Image.open(r"C:\Users\Dhinesh Kumar\Downloads\yt.jpg") 
+        image = Image.open("yt.jpg") 
         st.image(image, caption='Youtube Data Harvesting')
 
     
@@ -407,12 +416,27 @@ def main():
                 mycursor.execute(selected_ques.get('query'))
                 st.dataframe(pd.DataFrame(mycursor,columns=selected_ques.get('columns')),use_container_width=True)
     elif choice=="About":
-        st.header('About tool')
-        st.write('''Youtube data scrapper will harvest the data from the public youtube channels.
+        with st.expander("Youtube Scrapper"):
+            st.write('''Youtube data scrapper will harvest the data from the public youtube channels.
                    We need to provide the channel ID to this too which we want to scrape the data.
                    once after scrapping, the harvested data is stored into MongoDB as a datalake, 
                    the selected data can be further moved into MySQL and we can do analysis of our data''')
-
+        with st.expander("Youtube V3 api"):
+            st.write('''API that provides access to YouTube data, such as videos, playlists, channels and comments.
+            with the help of google developer console, can get the access to this api''')
+        with st.expander("Mondodb"):
+            st.write('''MongoDB is an open source document database used for storing unstrcutured data. The data is stored as JSON like documents called BSON. 
+                  It is used by developers to work esaily with real time data analystics, content management and lot of other web applications.''')
+        with st.expander("MySQL"):
+            st.write('''MySQL is one of the most recognizable technologies in the modern big data ecosystem.
+            MySQL is a relational database management system. It stores structured data in form of tables.
+            It works based on  based on structured query language (SQL).''')
+        with st.expander("Streamlit"):
+            st.write('''Streamlit is a **awesome opensource framwork used for buidling highly interactive sharable web applications*** in python language. 
+                  Its easy to share *machine learning and datasciecne web apps* using streamlit.
+                  It allows the app to load the large set of datas from web for manipulation and  performing expensive computations.''')
+    
         
+
 
 main()
