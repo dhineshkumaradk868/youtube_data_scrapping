@@ -1,0 +1,16 @@
+version: '3.0'
+services:
+  db:
+    container_name: mydb
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+  app:
+    container_name: youtube-scrapper
+    links: 
+    - "db"
+    build: ./
+    ports:
+    - "8501:8501"
