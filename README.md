@@ -8,6 +8,7 @@ Youtube data scrapper will harvest the data from the public youtube channels usi
 
  - [GUVI](https://www.guvi.in/)
  - [Mentor Mr.Nethaji Nirmal](https://www.linkedin.com/in/nethaji-nirmal/)
+ - [Mentor Mr.Santhosh Nagaraj](https://www.linkedin.com/in/santhoshnagaraj94/)
  - [Streamlit docs](https://docs.streamlit.io/)
 
 
