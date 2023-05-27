@@ -46,5 +46,5 @@ Questions menu is used to analyse the scrpped data with the few set of questions
 Under About menu, we can find few descriptions of the major components used
 
 
-## Creating the UI
+## Demo
 Demo of the project is posted in the [Linkedin](https://www.linkedin.com/posts/dhineshkumar-dk_webscraping-datascience-ai-activity-7068244026088456192-YG1K?utm_source=share&utm_medium=member_desktop) 
